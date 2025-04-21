@@ -51,3 +51,70 @@ class RNNModel(nn.Module):
         x, _ = self.rnn(x)
         x = self.rnn_ln(x)
         return self.linear(x)
+
+    def train_epoch(self, loader, optimizer, criterion, scheduler):
+        device = next(self.parameters()).device
+        optimizer.zero_grad()
+        
+        total_loss = 0.0
+        self.train()
+
+        for batch_idx, (x, y) in enumerate(loader):
+            x = x.to(device)
+            y = y.to(device)
+
+            with torch.cuda.amp.autocast(dtype=torch.float16):
+                logits = self(x[:, :-1])
+                assert not torch.any(torch.isnan(logits))
+
+                loss = criterion(logits.transpose(1, 2), y[:, 1:].long())
+                assert not torch.isnan(loss)
+                
+                loss = loss / ACCUM_STEPS
+
+            loss.backward()
+
+                  
+            if (batch_idx + 1) % ACCUM_STEPS == 0:
+                torch.nn.utils.clip_grad_norm_(self.parameters(), 1.0)  # Gradient clipping
+                optimizer.step()
+                optimizer.zero_grad()
+                scheduler.step() 
+                
+            
+            total_loss += loss.item() * ACCUM_STEPS
+
+        if (batch_idx + 1) % ACCUM_STEPS:
+            torch.nn.utils.clip_grad_norm_(self.parameters(), 1.0)  # Gradient clipping
+
+            optimizer.step()
+            optimizer.zero_grad()
+            scheduler.step()
+
+        
+        return total_loss / len(loader)
+
+
+    def validate(self, loader, criterion):
+        device = next(self.parameters()).device
+
+        total_loss = 0.0
+        self.eval()
+
+        with torch.no_grad():
+            for batch_idx, (x, y) in enumerate(loader):
+                x = x.to(device)
+                y = y.to(device)
+        
+                with torch.cuda.amp.autocast(dtype=torch.float16):
+                    logits = self(x[:, :-1])
+                    assert not torch.any(torch.isnan(logits))
+        
+                    loss = criterion(logits.transpose(1, 2), y[:, 1:].long())
+                    assert not torch.isnan(loss)
+                    
+                    loss = loss
+        
+                total_loss += loss.item()
+
+        return total_loss / len(loader)
