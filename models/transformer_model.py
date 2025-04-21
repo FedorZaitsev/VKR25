@@ -6,6 +6,7 @@ import numpy as np
 import torch.nn.functional as F
 import math
 from torch.nn import TransformerEncoder, TransformerEncoderLayer
+from models import MAX_LENGTH, VOCAB_SIZE
 
 
 class PositionalEncoding(nn.Module):
