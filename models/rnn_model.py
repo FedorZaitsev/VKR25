@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import random
 import numpy as np
+from models import MAX_LENGTH, VOCAB_SIZE
 
 
 class RNNModel(nn.Module):
