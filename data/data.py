@@ -5,6 +5,8 @@ import random
 import numpy as np
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import Dataset, DataLoader, ConcatDataset
+from tqdm import tqdm
+
 from data import BOS_TOKEN, EOS_TOKEN, INP_PAD_TOKEN, TAR_PAD_TOKEN, VOCAB_SIZE, MAX_LENGTH, OVERLAP, NUM_WORKERS, BATCH_SIZE, SEED
 
 
