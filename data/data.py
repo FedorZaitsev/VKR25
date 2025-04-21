@@ -62,7 +62,7 @@ def collate_fn(batch):
     return inputs_padded, targets_padded
 
 
-def get_loader(dataset, batch_size=BATCH_SIZE, num_workers=NUM_WROKERS, collate_fn=collate_fn):
+def get_loader(dataset, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS, collate_fn=collate_fn):
 	def seed_worker(worker_id):
 		worker_seed = torch.initial_seed() % 2**32
 		np.random.seed(worker_seed)
