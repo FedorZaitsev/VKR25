@@ -86,8 +86,8 @@ class RNNModel(nn.Module):
                     if batch_idx == rand_eval_batch:
                         grads = []
                         for param in self.parameters():
-                            grads.append(param.grad.view(-1).norm())
-                        grads = torch.cat(grads)
+                            grads.append(param.grad.norm().item())
+                        grads = torch.tensor(grads)
                         logger.log('Mean grad norm', grads.mean())
                         logger.log('Median grad norm', grads.median())
                         logger.log('Min grad norm', grads.min())
