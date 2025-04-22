@@ -111,7 +111,7 @@ class RNNModel(nn.Module):
         return total_loss / len(loader)
 
 
-    def validate(self, loader, criterion):
+    def validate(self, loader, criterion, logger=None):
         device = next(self.parameters()).device
 
         total_loss = 0.0
