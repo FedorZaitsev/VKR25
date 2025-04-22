@@ -63,7 +63,7 @@ class TransformerModel(nn.Module):
         mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
         return mask
 
-    def train_epoch(self, loader, optimizer, criterion, scheduler=None):
+    def train_epoch(self, loader, optimizer, criterion, scheduler=None, logger=None):
         device = next(self.parameters()).device
         optimizer.zero_grad()
         
@@ -124,7 +124,7 @@ class TransformerModel(nn.Module):
         return total_loss / len(loader)
     
     
-    def validate(self, loader, criterion):
+    def validate(self, loader, criterion, logger=None):
         device = next(self.parameters()).device
     
         total_loss = 0.0
@@ -148,7 +148,7 @@ class TransformerModel(nn.Module):
                     loss = loss
         
                 total_loss += loss.item()
-                
+
         if logger is not None:
             logger.log('Valid loss', total_loss / len(loader))    
         return total_loss / len(loader)
