@@ -1,1 +1,1 @@
-from wandb_logger import *
+from wandb_logger import WandBLogger
