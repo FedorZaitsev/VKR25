@@ -69,7 +69,9 @@ class TransformerModel(nn.Module):
         
         total_loss = 0.0
         self.train()
-    
+        
+        rand_eval_batch = random.randint(0, len(loader)-1)
+ 
         for batch_idx, (x, y) in enumerate(loader):
             x = x.to(device)
             y = y.to(device)
@@ -91,6 +93,19 @@ class TransformerModel(nn.Module):
                   
             if (batch_idx + 1) % ACCUM_STEPS == 0:
                 torch.nn.utils.clip_grad_norm_(self.parameters(), 1.0)  # Gradient clipping
+
+                if logger is not None:
+                    logger.log('Train loss', loss.item())
+                    if batch_idx == rand_eval_batch:
+                        grads = []
+                        for param in self.parameters():
+                            grads.append(param.grad.view(-1).norm())
+                        grads = torch.cat(grads)
+                        logger.log('Mean grad norm', grads.mean())
+                        logger.log('Median grad norm', grads.median())
+                        logger.log('Min grad norm', grads.min())
+                        logger.log('Max grad norm', grads.max())
+
                 optimizer.step()
                 optimizer.zero_grad()
                 scheduler.step() 
@@ -133,5 +148,7 @@ class TransformerModel(nn.Module):
                     loss = loss
         
                 total_loss += loss.item()
-    
+                
+        if logger is not None:
+            logger.log('Valid loss', total_loss / len(loader))    
         return total_loss / len(loader)
