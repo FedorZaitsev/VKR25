@@ -96,6 +96,8 @@ class TransformerModel(nn.Module):
 
                 if logger is not None:
                     logger.log('Train loss', loss.item())
+                    if scheduler is not None:
+                        logger.log('Learning rate', float(scheduler.get_last_lr()))
                     if batch_idx == rand_eval_batch:
                         grads = []
                         for param in self.parameters():
