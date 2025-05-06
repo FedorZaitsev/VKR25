@@ -63,7 +63,7 @@ class TransformerModel(nn.Module):
         mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
         return mask
 
-    def train_epoch(self, loader, optimizer, criterion, scheduler=None, logger=None):
+    def train_epoch(self, loader, optimizer, criterion, scheduler=None, logger=None, clip_grad=True, autocast=True):
         device = next(self.parameters()).device
         optimizer.zero_grad()
         
@@ -78,8 +78,17 @@ class TransformerModel(nn.Module):
 
             sz = x.shape[1] - 1
             mask = self.generate_square_subsequent_mask(sz).to(device)
-            
-            with torch.cuda.amp.autocast(dtype=torch.float16):
+
+            if autocast:
+                with torch.cuda.amp.autocast(dtype=torch.float16):
+                    logits = self.forward(x[:, :-1], mask)
+                    assert not torch.any(torch.isnan(logits))
+        
+                    loss = criterion(logits.transpose(1, 2), y[:, 1:].long())
+                    assert not torch.isnan(loss)
+                    
+                    loss = loss / ACCUM_STEPS
+            else:
                 logits = self.forward(x[:, :-1], mask)
                 assert not torch.any(torch.isnan(logits))
     
@@ -87,12 +96,13 @@ class TransformerModel(nn.Module):
                 assert not torch.isnan(loss)
                 
                 loss = loss / ACCUM_STEPS
-    
+                
             loss.backward()
     
                   
             if (batch_idx + 1) % ACCUM_STEPS == 0:
-                torch.nn.utils.clip_grad_norm_(self.parameters(), 1.0)  # Gradient clipping
+                if clip_grad:
+                    torch.nn.utils.clip_grad_norm_(self.parameters(), 1.0)  # Gradient clipping
 
                 if logger is not None:
                     logger.log('Train loss', loss.item())
