@@ -9,6 +9,7 @@ import torch.nn.functional as F
 import math
 from torch.nn import TransformerEncoder, TransformerEncoderLayer
 from models import MAX_LENGTH, VOCAB_SIZE, ACCUM_STEPS
+from models.transformer_model import TransformerModel
 
 ph = pershom.pershom_backend.__C.VRCompCuda__vr_persistence_l1
 
